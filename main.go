@@ -5,6 +5,8 @@ import (
 	"time"
 	"github.com/rs/xid"
 	"net/http"
+	"io/ioutil"
+	"encoding/json"
 )
 
 var recipes []Recipe
@@ -16,6 +18,10 @@ type Recipe struct {
 	Ingredients  []string  `json:"ingredients"`
 	Instructions []string  `json:"instructions"`
 	PublishedAt  time.Time `json:"publishedAt"`
+}
+
+func ListRecipesHandler(context *gin.Context) {
+	context.JSON(http.StatusOK, recipes)
 }
 
 func NewRecipeHandler(context *gin.Context) {
@@ -33,12 +39,15 @@ func NewRecipeHandler(context *gin.Context) {
 	context.JSON(http.StatusOK, recipe)
 }
 
-func init(){
+func init() {
 	recipes = make([]Recipe, 0)
+	file, _ := ioutil.ReadFile("recipes.json")
+	_ = json.Unmarshal([]byte(file), &recipes)
 }
 
 func main() {
 	router := gin.Default()
 	router.POST("/recipes", NewRecipeHandler)
+	router.GET("/recipes", ListRecipesHandler)
 	router.Run()
 }
