@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
+	"strings"
 )
 
 var recipes []Recipe
@@ -18,6 +19,27 @@ type Recipe struct {
 	Ingredients  []string  `json:"ingredients"`
 	Instructions []string  `json:"instructions"`
 	PublishedAt  time.Time `json:"publishedAt"`
+}
+
+func SearchRecipesHandler(context *gin.Context) {
+	tag := context.Query("tag")
+	listOfRecipes := make([]Recipe, 0)
+
+	for i := 0; i < len(recipes); i++ {
+		found := false
+
+		for _, t := range recipes[i].Tags {
+			if strings.EqualFold(t, tag) {
+				found = true
+			}
+		}
+
+		if found {
+			listOfRecipes = append(listOfRecipes, recipes[i])
+		}
+	}
+
+	context.JSON(http.StatusOK, listOfRecipes)
 }
 
 func DeleteRecipeHandler(context *gin.Context) {
@@ -101,5 +123,6 @@ func main() {
 	router.GET("/recipes", ListRecipesHandler)
 	router.PUT("/recipes/:id", UpdateRecipeHandler)
 	router.DELETE("/recipes/:id", DeleteRecipeHandler)
+	router.GET("/recipes/search", SearchRecipesHandler)
 	router.Run()
 }
